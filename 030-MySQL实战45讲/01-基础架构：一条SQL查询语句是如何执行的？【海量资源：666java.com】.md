@@ -16,7 +16,7 @@ mysql> select * from T where ID=10；
 
 ![](images/68319/0d2070e8f84c4801adbfa03bda1f98d9.png
 
-![0d2070e8f84c4801adbfa03bda1f98d9【海量资源：666java.com】](images/68319/0d2070e8f84c4801adbfa03bda1f98d9【海量资源：666java.com】.png)
+![0d2070e8f84c4801adbfa03bda1f98d9【海量资源：666java.com】](images/68319/0d2070e8f84c4801adbfa03bda1f98d9.png)
 
 MySQL的逻辑架构图
 
