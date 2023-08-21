@@ -218,7 +218,7 @@
    3. max_limit_id:表示生成Read View时，系统中应该分配给下一个事务的id值。
    4. creator_trx_id: 创建当前Read View的事务ID
 
-   ![readView](Mysql事务.assets/readView.png)
+   ![readView](/Mysql事务.assets/readView.png)
 
 4. 匹配规则
 
