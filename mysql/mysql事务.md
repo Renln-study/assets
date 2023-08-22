@@ -299,11 +299,10 @@ SET SESSION TRANSACTION ISOLATION LEVEL $level
 | Gap Lock 间隙锁（只存在于可重复读隔离级别 ） | 间隙锁，锁定一个范围，但是个开区间，不能锁住记录本身间隙锁虽然区分X型和S型，但是没有什么区别，都是为了限制间隙之间不能插入幻影记录 | **间隙锁**存在于**非唯一索引**中，锁定**开区间**范围内的一段间隔。 |                                                              |
 | Next-Key Lock 临键锁 = 记录锁+ 间隙锁        | 锁住一个范围，并且锁住记录本身                               | 每个数据行上的**非唯一索引列**上都会存在一把**临键锁**，当某个事务持有该数据行的**临键锁**时，会锁住一段**左开右闭区间**的数据。临键锁只与 非唯一索引列 有关，在 唯一索引列（包括主键列）上不存在临键锁。 |                                                              |
 
-#### 6. 间隙锁实现过程
+6. 间隙锁实现过程
 
-##### 6.1 前置操作
+6.1 模拟数据
 
-```
 # 数据库建表
 CREATE TABLE t_users (
   id INT(11) NOT NULL AUTO_INCREMENT,
@@ -318,34 +317,74 @@ INSERT INTO t_users (name, reward) VALUES ('王五', 300.00);
 INSERT INTO t_users (name, reward) VALUES ('赵六', 400.00);
 INSERT INTO t_users (name, reward) VALUES ('钱七', 500.00);
 INSERT INTO t_users (name, reward) VALUES ('孙八', 600.00);
-```
 
-##### 6.2 问题复现
+6.2 问题复现
 
-![first](Mysql事务.assets/first.png)	
+6.2.1 间隙锁+记录锁能避免删除操作带来的幻读吗
 
-![second](Mysql事务.assets/second.png)
+        
 
-1. 执行过程
+执行过程
 
-   >  select * from t_users where id >= 6 for update;
+select * from t_users where id >= 6 for update;
 
-2. 日志输出结果
+日志输出结果
 
-   >  select \* from performance_schema.data_locks\G**
-   - 三条行级锁，第一条为记录锁
+select * from performance_schema.data_locks\G
 
-   - 第二条为（6，8]间隙锁
+三条行级锁，第一条为记录锁
 
-   - 第三条为（8，+∞]
+第二条为（6，8]间隙锁
 
-   ![third](Mysql事务.assets/third.png)
+第三条为（8，+∞]
 
-##### 6.3 特殊情况
+  
 
-1. 查询条件所归属的字段无索引覆盖和索引覆盖的区别
+6.2.2 可重复读完全解决幻读了嘛
 
-2. 如果不是唯一索引还会添加间隙表吗
-3. 删除操作会影响间隙锁吗
-4. 1间隙锁与死锁
+环境数据：在RR的隔离级别条件下，设置事务不可自动提交
+
+第一种情况：
+
+执行动作
+
+事务A
+
+事务B
+
+执行动作
+
+开启事务；
+
+查询id=6的数据；
+
+开启事务；
+
+插入数据 （id = 6）；
+
+提交；
+
+再次查询id为6的数据？结果是什么
+
+更新id为6的数据？结果是什么
+
+2. 结果：
+
+再次查询id =6 的数据
+
+更新 id = 6 的 数据
+
+此时事务B完成提交之后，表中并不存在锁了
+
+但是update语句执行时，又会添加上X型 记录锁
+
+6.3 特殊情况
+
+查询条件所归属的字段无索引覆盖和索引覆盖的区别
+
+如果不是唯一索引还会添加间隙表吗
+
+间隙锁与死锁
+
+可重复读隔离级别完全解决了幻读问题吗？
 
